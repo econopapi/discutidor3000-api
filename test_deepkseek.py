@@ -17,15 +17,15 @@ DEEPSEEK_HEADERS = {
 
 NEW_CHAT_PROMPT = """
 En la primer interacción, recibirás un mensaje del usuario indicándote una postura,
-que debes defender durante toda la conversación. Necesito que serialices el mensaje y
+que debes defender durante toda la conversación. Necesito que interpretes el mensaje y
+extraigas la postura que el usuario quiere que defiendas. Luego, me la serialices y
 me devuelvas un JSON con la siguiente estructura:
 { "posture": str } """
 
 # Conversasiones guardadas en memoria para testear
 CONVERSATIONS: dict[str,dict] =  dict(
-    # conversation_id: str,
-    # posture: str,
-    # messages: list[dict[str,str]]
+    # "conversation_id": { "posture": str,
+    #                     "messages": list[dict[str,str]] }
 )
 
 def gen_main_chat_prompt(posture: str) -> str:
@@ -51,7 +51,21 @@ def gen_main_chat_prompt(posture: str) -> str:
 def chat(
         message: str,
         conversation_id: Optional[str] = None
-) -> dict:
+) -> Optional[dict]:
+    
+    """
+    Función principal para manejar la conversación con el chatbot.
+    Si no se proporciona conversation_id, se inicia una nueva conversación.
+
+    Args:
+        message (str): Mensaje del usuario.
+        conversation_id (Optional[str]): ID de la conversación.
+            Si es None, se inicia una nueva conversación.
+
+    Returns:
+        Optional[dict]: Diccionario con la respuesta del chatbot y el ID de la conversación.
+        None si hay un error.
+    """
     
     user_message_format = { "role": "user",
                       "content": message
