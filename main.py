@@ -1,11 +1,15 @@
 import logging
+import os
 from fastapi import FastAPI
 from structures import ChatRequest
-from chat_service import chat
+from discutidor3000 import Discutidor3000
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
+# Initialize Discutidor3000 with API key from environment
+discutidor = Discutidor3000(api_key=os.getenv("DEEPSEEK_API_KEY"))
 
 api = FastAPI()
 
@@ -13,11 +17,10 @@ api = FastAPI()
 def hola():
     return {"mensaje": "Hola Mundo!"}
 
-
 @api.post("/api/v1/chat")
 def chat_endpoint(request: ChatRequest):
     try:
-        response = chat(
+        response = discutidor.chat(
             message=request.message,
             conversation_id=request.conversation_id)
         
@@ -29,7 +32,8 @@ def chat_endpoint(request: ChatRequest):
         
         return {
             "conversation_id": response["conversation_id"],
-            "response": response
+            "response": response["response"],
+            "posture": response.get("posture")
         }
     except Exception as e:
         logger.error(f"Error en el endpoint /api/v1/chat: {e}")
