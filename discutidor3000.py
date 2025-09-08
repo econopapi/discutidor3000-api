@@ -3,7 +3,7 @@ from uuid import uuid4
 from typing import List, Dict, Union, Optional
 from dotenv import load_dotenv
 
-from structures import ChatRequest
+from structures import ChatRequest, ChatResponse, Message
 
 load_dotenv()
 
@@ -157,6 +157,26 @@ class Discutidor3000:
             "response": chatbot_response,
             "posture": conversation["posture"],
             "messages": messages }
+    
+
+    def _format_response(self, conversation_data: Dict) -> ChatResponse:
+        """Formatea la respuesta del chatbot a la estructura ChatResponse.
+        Args:
+            conversation_data (Dict): Datos de la conversación.
+        Returns:
+            ChatResponse: Respuesta formateada."""
+        conversation_id = conversation_data["conversation_id"]
+        messages = conversation_data["messages"][1:]  # excluir system prompt
+        recent_messages = messages[-5:]  # 5 últimos mensajes
+        history = list()
+        for m in recent_messages[::-1]:
+            role = "bot" if m["role"] == "assistant" else m["role"]
+            history.append(Message(role=role,
+                                   content=m["content"]))
+        return ChatResponse(
+            conversation_id=conversation_id,
+            message=history)
+
 
     def new_conversation(self, message: str) -> Optional[Dict]:
         """Inicia una nueva conversación, extrayendo la postura del mensaje inicial.
@@ -204,10 +224,13 @@ class Discutidor3000:
             Optional[Dict]: Diccionario con la respuesta del chatbot y el ID de la conversación.
             None si hay un error."""
         if conversation_id is None:
-            return self.new_conversation(message)
+            response = self.new_conversation(message)
         else:
-            return self.continue_conversation(conversation_id, message)
-        
+            response = self.continue_conversation(conversation_id, message)
+        if response is None:
+            return None
+        return self._format_response(response)
+    
 
     def list_conversations(self) -> List[str]:
         """Lista los IDs de todas las conversaciones generadas.

@@ -1,7 +1,8 @@
 import logging
 import os
 from fastapi import FastAPI
-from structures import ChatRequest
+from fastapi.responses import JSONResponse
+from structures import ChatRequest, ChatResponse
 from discutidor3000 import Discutidor3000
 
 logging.basicConfig(level=logging.INFO,
@@ -17,7 +18,7 @@ api = FastAPI()
 def hola():
     return {"mensaje": "Hola Mundo!"}
 
-@api.post("/api/v1/chat")
+@api.post("/api/v1/chat", response_model=ChatResponse)
 def chat_endpoint(request: ChatRequest):
     try:
         response = discutidor.chat(
@@ -30,11 +31,7 @@ def chat_endpoint(request: ChatRequest):
                 "response": None
             }
         
-        return {
-            "conversation_id": response["conversation_id"],
-            "response": response["response"],
-            "posture": response.get("posture")
-        }
+        return JSONResponse(content=response.model_dump())
     except Exception as e:
         logger.error(f"Error en el endpoint /api/v1/chat: {e}")
         return {
