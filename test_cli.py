@@ -1,8 +1,9 @@
-from chat_service import chat
+from discutidor3000 import Discutidor3000
+import os
 
 def init():
     print("""
-    =====Discutidor3000[DeepSeek Edition] Test Console=====
+    =====Discutidor3000 [DeepSeek Edition] Test CLI=====
           
     En el primer mensaje, indica la postura que quieres que defienda el bot.
     Durante toda la conversación, el bot defenderá esta postura.
@@ -12,6 +13,10 @@ def init():
     COMANDOS:
           - /n : iniciar nueva conversación"
           - /q : salir""")
+    
+    # Initialize Discutidor3000 instance
+    api_key = os.getenv('DEEPSEEK_API_KEY')
+    discutidor = Discutidor3000(api_key=api_key)
     
     current_conversation_id = None
 
@@ -25,7 +30,7 @@ def init():
                 break
 
             try:
-                response = chat(message=user_input)
+                response = discutidor.chat(message=user_input)
                 if response is None:
                     print(" > [!] Error en la conversación, inténtalo de nuevo.")
                     continue
@@ -48,7 +53,7 @@ def init():
                 continue
 
             try:
-                response = chat(
+                response = discutidor.chat(
                     message=user_input,
                     conversation_id=current_conversation_id)
                 if response is None:
