@@ -1,10 +1,14 @@
 
+import logging
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from api.endpoints import chat_router
 
-api = FastAPI()
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
+api = FastAPI()
 api.include_router(chat_router,
                    prefix="/api/v1",
                    tags=["chat"])
