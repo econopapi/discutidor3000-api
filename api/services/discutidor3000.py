@@ -1,13 +1,19 @@
 
-import requests, json
+from typing import ( 
+    List,
+    Dict,
+    Optional)
+from ..structures import (
+    Message,
+    Conversation,
+    ChatResponse)
+from .redis import RedisService
+
+import requests, json, logging
 from datetime import datetime
 from uuid import uuid4
-from typing import List, Dict, Union, Optional
-from dotenv import load_dotenv
 
-from ..structures import ChatRequest, ChatResponse, Message, Conversation
-
-load_dotenv()
+logger = logging.getLogger(__name__)
 
 class Discutidor3000:
     """Chatbot que defiente una postura dada durante toda la conversación."""
@@ -24,6 +30,7 @@ class Discutidor3000:
             "Authorization": f"Bearer {self.api_key}"
         }
 
+        self.redis = RedisService()
         self.conversations: Dict[str, List[Dict]] = {}
         self.new_chat_prompt = """
         En la primer interacción, recibirás un mensaje del usuario indicándote una postura,
@@ -32,6 +39,8 @@ class Discutidor3000:
         me devuelvas un JSON con la siguiente estructura:
         { "posture": str }
         """
+
+        logger.debug(f"Discutidor3000 inicializado con API Key: {self.api_key is not None}")
 
 
     def _gen_system_prompt(self, posture: str) -> str:
@@ -69,22 +78,23 @@ class Discutidor3000:
             "messages": messages,
             "model": self.model,
             "temperature": self.temperature,
-            "max_tokens": self.max_tokens  
-        }
-
+            "max_tokens": self.max_tokens  }
         if use_json:
             payload["response_format"] = {"type": "json_object"}
-        
         try:
             response = requests.post(
                 url = f"{self.api_base}{self.api_endpoint}",
                 headers=self.headers,
                 json=payload)
-            
             if response.status_code == 200:
                 return response.json()
             else:
-                print(f" > [!] Error en la API: {response.status_code} - {response.text}")
+                logger.error(f"Error en la API: {response.status_code} - {response.text}")
+                logger.debug(f"""Trazo completo:
+                             URL: {self.api_base}{self.api_endpoint}
+                             Headers: {self.headers}
+                             Payload: {payload}
+                             Response: {response.text}""")
                 return None
         except Exception as e:
             print(f" > [!] Error en la petición a la API: {e}")
@@ -121,8 +131,8 @@ class Discutidor3000:
     def _init_conversation(self,
                            conversation_id: str,
                            posture: str,
-                           initial_message: str) -> None:
-        """Inicializa una nueva conversación.
+                           initial_message: str) -> Optional[bool]:
+        """Inicializa una nueva conversación y la almacena en Redis
         Args:
             conversation_id (str): ID de la conversación.
             posture (str): Postura a defender.
@@ -137,7 +147,9 @@ class Discutidor3000:
             created_at=datetime.now().isoformat(),
             last_updated=datetime.now().isoformat()
         )
-        self.conversations[conversation_id] = conversation.model_dump()
+        #self.conversations[conversation_id] = conversation.model_dump()
+        self.redis.set_conversation(conversation_id,
+                                    conversation)
         
 
     def _gen_response(self, conversation_id: str) -> Optional[Dict]:
@@ -148,22 +160,33 @@ class Discutidor3000:
         Returns:
             Optional[Dict]: Diccionario con la respuesta del chatbot y el ID de la conversación.
             None si hay un error."""
-        if conversation_id not in self.conversations:
-            raise ValueError("ID de conversación no válido.")
-        conversation = self.conversations[conversation_id]
-        messages = conversation["messages"]
+        conversation_data = self.redis.get_conversation(conversation_id)
+        logger.debug(f"Tipo de conversation_data: {type(conversation_data)}")
+        if not conversation_data:
+            raise ValueError("Conversación no encontrada en Redis.")
+        
+        # Trabajar directamente con el modelo Conversation
+        messages = [msg.model_dump() for msg in conversation_data.messages]
         response = self._api_request(messages)
         if response is None:
             return None
+        
         chatbot_response = response["choices"][0]["message"]["content"]
-        print(f" > [*] Respuesta del bot: {chatbot_response}")
-        messages.append({"role": "assistant", "content": chatbot_response})
-        conversation["messages"] = messages
+        
+        # Agregar la respuesta del chatbot como nuevo mensaje
+        new_message = Message(role="assistant", content=chatbot_response)
+        conversation_data.messages.append(new_message)
+        conversation_data.last_updated = datetime.now().isoformat()
+        
+        # Actualizar en Redis
+        self.redis.set_conversation(conversation_id, conversation_data)
+                                    
         return {
             "conversation_id": conversation_id,
             "response": chatbot_response,
-            "posture": conversation["posture"],
-            "messages": messages }
+            "posture": conversation_data.posture,
+            "messages": [msg.model_dump() for msg in conversation_data.messages]
+        }
     
 
     def _format_response(self, conversation_data: Dict) -> ChatResponse:
@@ -239,18 +262,34 @@ class Discutidor3000:
         return self._format_response(response)
     
 
-    def list_conversations(self) -> List[str]:
-        """Lista los IDs de todas las conversaciones generadas.
+    def get_all_conversations(self) -> Optional[Dict[str, str]]:
+        """Obtiene un resumen de todas las conversaciones almacenadas.
         Returns:
-            List[str]: Lista de IDs de conversaciones."""
-        return list(self.conversations.keys())
+            Optional[Dict[str, str]]: Diccionario con los IDs y posturas de todas las conversaciones.
+            None si hay un error."""
+        try:
+            conversations = self.redis.get_all_conversations()
+            return {
+                "conversations": conversations
+            }
+
+        except Exception as e:
+            logger.error(f"Error al obtener conversaciones: {e}")
+            return None
     
 
-    def get_conversation(self, conversation_id: str) -> Optional[Dict]:
-        """Obtiene el historial completo de una conversación dada su ID.
-        Args:
-            conversation_id (str): ID de la conversación.
-        Returns:
-            Optional[Dict]: Diccionario con el historial de la conversación.
-            None si no existe la conversación."""
-        return self.conversations.get(conversation_id, None)
+    # def list_conversations(self) -> List[str]:
+    #     """Lista los IDs de todas las conversaciones generadas.
+    #     Returns:
+    #         List[str]: Lista de IDs de conversaciones."""
+    #     return list(self.conversations.keys())
+    
+
+    # def get_conversation(self, conversation_id: str) -> Optional[Dict]:
+    #     """Obtiene el historial completo de una conversación dada su ID.
+    #     Args:
+    #         conversation_id (str): ID de la conversación.
+    #     Returns:
+    #         Optional[Dict]: Diccionario con el historial de la conversación.
+    #         None si no existe la conversación."""
+    #     return self.conversations.get(conversation_id, None)
