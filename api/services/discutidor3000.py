@@ -5,7 +5,7 @@ from uuid import uuid4
 from typing import List, Dict, Union, Optional
 from dotenv import load_dotenv
 
-from structures import ChatRequest, ChatResponse, Message, Conversation
+from ..structures import ChatRequest, ChatResponse, Message, Conversation
 
 load_dotenv()
 
