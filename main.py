@@ -4,7 +4,6 @@ from fastapi.responses import JSONResponse
 from api.endpoints import chat_router
 
 api = FastAPI()
-
 api.include_router(chat_router,
                    prefix="/api/v1",
                    tags=["chat"])

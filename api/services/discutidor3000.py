@@ -138,12 +138,6 @@ class Discutidor3000:
             last_updated=datetime.now().isoformat()
         )
         self.conversations[conversation_id] = conversation.model_dump()
-        # self.conversations[conversation_id] = {
-        #     "conversation_id": conversation_id,
-        #     "posture": posture,
-        #     "messages": [
-        #         {"role": "system", "content": self._gen_system_prompt(posture)},
-        #         {"role": "user", "content": initial_message} ]}
         
 
     def _gen_response(self, conversation_id: str) -> Optional[Dict]:
