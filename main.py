@@ -18,7 +18,7 @@ api = FastAPI()
 def hola():
     return {"mensaje": "Hola Mundo!"}
 
-@api.post("/api/v1/chat", response_model=ChatResponse)
+@api.post("/api/v1/chat")
 def chat_endpoint(request: ChatRequest):
     try:
         response = discutidor.chat(
@@ -31,7 +31,10 @@ def chat_endpoint(request: ChatRequest):
                 "response": None
             }
         
-        return JSONResponse(content=response.model_dump())
+        return JSONResponse(
+            status_code=200,
+            content=response.model_dump())
+    
     except Exception as e:
         logger.error(f"Error en el endpoint /api/v1/chat: {e}")
         return {

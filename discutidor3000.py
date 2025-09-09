@@ -1,9 +1,11 @@
+
 import requests, json
+from datetime import datetime
 from uuid import uuid4
 from typing import List, Dict, Union, Optional
 from dotenv import load_dotenv
 
-from structures import ChatRequest, ChatResponse, Message
+from structures import ChatRequest, ChatResponse, Message, Conversation
 
 load_dotenv()
 
@@ -125,12 +127,23 @@ class Discutidor3000:
             conversation_id (str): ID de la conversación.
             posture (str): Postura a defender.
             initial_message (str): Mensaje inicial del usuario."""
-        self.conversations[conversation_id] = {
-            "conversation_id": conversation_id,
-            "posture": posture,
-            "messages": [
-                {"role": "system", "content": self._gen_system_prompt(posture)},
-                {"role": "user", "content": initial_message} ]}
+        conversation = Conversation(
+            conversation_id=conversation_id,
+            posture=posture,
+            messages=[
+                Message(role="system", content=self._gen_system_prompt(posture)),
+                Message(role="user", content=initial_message)
+            ],
+            created_at=datetime.now().isoformat(),
+            last_updated=datetime.now().isoformat()
+        )
+        self.conversations[conversation_id] = conversation.model_dump()
+        # self.conversations[conversation_id] = {
+        #     "conversation_id": conversation_id,
+        #     "posture": posture,
+        #     "messages": [
+        #         {"role": "system", "content": self._gen_system_prompt(posture)},
+        #         {"role": "user", "content": initial_message} ]}
         
 
     def _gen_response(self, conversation_id: str) -> Optional[Dict]:
