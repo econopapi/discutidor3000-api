@@ -1,4 +1,4 @@
-from discutidor3000 import Discutidor3000
+from api.services import Discutidor3000
 import os
 
 def init():
