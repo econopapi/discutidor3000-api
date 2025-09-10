@@ -19,6 +19,7 @@ services:
     environment:
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - REDIS_URL=redis://redis:6379/0
+      - ROOT_PATH=${ROOT_PATH}
     depends_on:
       redis:
         condition: service_healthy
