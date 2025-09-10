@@ -40,7 +40,8 @@ class Discutidor3000:
         { "posture": str }
         """
 
-        logger.debug(f"Discutidor3000 inicializado con API Key: {self.api_key is not None}")
+        if not self.api_key:
+            raise ValueError("API key is required for Discutidor3000.")
 
 
     def _gen_system_prompt(self, posture: str) -> str:
