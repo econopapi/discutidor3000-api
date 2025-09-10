@@ -12,12 +12,65 @@ Desarrollada en FastAPI y utilizando el modelo `DeepSeek-V3.1 (Non-thinking Mode
 - 💬 **CLI interactivo**: Interfaz de línea de comandos para pruebas
 - 🧪 **Testing completo**: Suite de tests unitarios con cobertura amplia
 - 📊 **Logging**: Sistema de logging detallado para debugging
+- 🐳 **Containerización**: Despliegue completo con Docker y Docker Compose
 
-## Instalación
+## Instalación Rápida con Makefile
+
+Este proyecto incluye un Makefile que automatiza todas las tareas de instalación, testing y despliegue:
+
+```bash
+# Ver todos los comandos disponibles
+make
+
+# Instalar todas las dependencias y configurar el proyecto
+make install
+
+# Ejecutar tests
+make test
+
+# Ejecutar el servicio completo en Docker
+make run
+
+# Detener todos los servicios
+make down
+
+# Limpiar completamente todos los contenedores y volúmenes
+make clean
+```
+
+## Variables de Entorno
+
+Las siguientes variables de entorno deben configurarse en el archivo `.env`:
+
+### Variables requeridas
+
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `DEEPSEEK_API_KEY` | **Requerida**. API key de DeepSeek para acceder al modelo de chat | `sk-xxxxxxxxxxxxxxxx` |
+
+### Variables opcionales
+Si se usará Redis fuera del contenedor Docker por default, estas variables pueden ser configuradas:
+
+| Variable | Descripción | Valor por Defecto |
+|----------|-------------|-------------------|
+| `REDIS_URL` | URL de conexión a Redis | `redis://localhost:6379/0` |
+
+### Cómo obtener una API Key de DeepSeek
+
+1. Visita [https://platform.deepseek.com](https://platform.deepseek.com)
+2. Crea una cuenta o inicia sesión
+3. Ve a la sección de "API Keys"
+4. Genera una nueva API key
+5. Copia la key y agrégala a tu archivo `.env`
+
+## Instalación Manual (Alternativa)
+
+Si prefieres no usar el Makefile, puedes seguir estos pasos:
 
 ### Prerrequisitos
 
 - Python 3.8+
+- Docker y Docker Compose
 - Redis (para persistencia de conversaciones)
 - API Key de DeepSeek
 
@@ -43,8 +96,7 @@ pip install -r requirements.txt
 4. **Configurar variables de entorno**
 ```bash
 cp .env-example .env
-# Editar .env y agregar tu DEEPSEEK_API_KEY y, opcionalmente
-# REDIS_URL si no usas la configuración por defecto
+# Editar .env y agregar tu DEEPSEEK_API_KEY
 ```
 
 5. **Iniciar Redis**
@@ -55,10 +107,26 @@ docker-compose up -d redis
 
 ## Uso
 
-### API HTTP
+### Opción 1: Docker (Recomendado)
+
+```bash
+# Instalar y configurar todo automáticamente
+make install
+
+# Ejecutar el servicio completo
+make run
+```
+
+La API estará disponible en `http://localhost:8000` y Redis en `localhost:6379`.
+
+### Opción 2: Desarrollo Local
 
 **Iniciar el servidor**
 ```bash
+# Activar entorno virtual
+source venv/bin/activate
+
+# Iniciar servidor
 uvicorn main:api --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -71,13 +139,28 @@ uvicorn main:api --reload --host 0.0.0.0 --port 8000
 ### CLI Interactivo
 
 ```bash
+# Con entorno virtual activado
 python cli.py
+
+# O usando el contenedor
+docker-compose exec api python cli.py
 ```
 
 El CLI permite:
 - Iniciar nuevas conversaciones con `/n`
 - Salir con `/q`
 - Conversación continua una vez establecida la postura
+
+## Comandos del Makefile
+
+| Comando | Descripción |
+|---------|-------------|
+| `make` o `make help` | Muestra lista de todos los comandos disponibles |
+| `make install` | Instala todas las dependencias necesarias. Detecta herramientas faltantes y proporciona instrucciones |
+| `make test` | Ejecuta toda la suite de tests |
+| `make run` | Ejecuta el servicio y todas las dependencias en Docker |
+| `make down` | Detiene todos los servicios en ejecución |
+| `make clean` | Detiene y elimina todos los contenedores, redes y volúmenes |
 
 ## API Reference
 
@@ -137,8 +220,11 @@ discutidor3000-api/
 ├── tests/                  # Tests unitarios
 ├── cli.py                  # Interfaz CLI
 ├── main.py                 # Aplicación FastAPI
-├── requirements.txt        # Dependencias Python
-└── docker-compose.yml      # Configuración Redis
+├── Dockerfile             # Imagen Docker para la API
+├── docker-compose.yml     # Orquestación de servicios
+├── Makefile              # Automatización de tareas
+├── requirements.txt      # Dependencias Python
+└── README.md            # Esta documentación
 ```
 
 ## Testing
@@ -146,12 +232,13 @@ discutidor3000-api/
 Ejecutar la suite completa de tests:
 
 ```bash
-# Desde la raíz del proyecto, con el entorno virtual activado
-pytest -v
-```
+# Usando Makefile (recomendado)
+make test
 
-O usando unittest:
-```bash
+# O manualmente
+pytest -v
+
+# O usando unittest
 python -m unittest discover tests -v
 ```
 
@@ -165,17 +252,19 @@ Los tests cubren:
 
 ## Configuración Avanzada
 
-### Variables de Entorno
-
-- `DEEPSEEK_API_KEY`: API key de DeepSeek (requerida)
-- `REDIS_URL`: URL de conexión a Redis (default: `redis://localhost:6379/0`)
-
 ### Parámetros del Modelo
 
 El chatbot usa los siguientes parámetros por defecto:
 - **Modelo**: `deepseek-chat`
 - **Temperatura**: `0.7`
 - **Max tokens**: `3750`
+
+### Configuración de Redis
+
+Por defecto, Redis se configura con:
+- **Puerto**: `6379`
+- **TTL de conversaciones**: 2 semanas (1,120,000 segundos)
+- **Persistencia**: Habilitada con appendonly
 
 ## Arquitectura
 
@@ -194,6 +283,24 @@ El chatbot usa los siguientes parámetros por defecto:
 3. Se agrega mensaje del usuario al historial
 4. Se genera respuesta usando todo el contexto
 5. Se actualiza conversación en Redis
+
+## Troubleshooting
+
+### Problemas Comunes
+
+**Error: "DEEPSEEK_API_KEY not set"**
+- Asegúrate de que el archivo `.env` existe y contiene `DEEPSEEK_API_KEY=tu_api_key`
+
+**Error: "Docker is not installed"**
+- Instala Docker siguiendo las instrucciones que proporciona `make install`
+
+**Error: "Connection refused" al conectar a Redis**
+- Verifica que Redis esté ejecutándose: `docker-compose ps`
+- Reinicia los servicios: `make down && make run`
+
+**Tests fallan**
+- Verifica que el entorno virtual esté activado
+- Reinstala dependencias: `make install`
 
 ## Contribución
 
