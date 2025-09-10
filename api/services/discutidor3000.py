@@ -1,4 +1,3 @@
-
 from typing import ( 
     List,
     Dict,
@@ -234,10 +233,21 @@ class Discutidor3000:
         Returns:
             Optional[Dict]: Diccionario con la respuesta del chatbot y el ID de la conversación.
             None si hay un error."""
-        if conversation_id not in self.conversations:
+        logger.debug(f"Continuando conversación ID: {conversation_id} con mensaje: {message}")
+        
+        # Obtener la conversación desde Redis
+        conversation_data = self.redis.get_conversation(conversation_id)
+        if not conversation_data:
             raise ValueError("ID de conversación no válido.")
-        user_message = {"role": "user", "content": message}
-        self.conversations[conversation_id]["messages"].append(user_message)
+        
+        # Agregar el nuevo mensaje del usuario
+        user_message = Message(role="user", content=message)
+        conversation_data.messages.append(user_message)
+        conversation_data.last_updated = datetime.now().isoformat()
+        
+        # Actualizar en Redis con el nuevo mensaje del usuario
+        self.redis.set_conversation(conversation_id, conversation_data)
+        
         return self._gen_response(conversation_id)
     
 
