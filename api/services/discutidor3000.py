@@ -1,4 +1,5 @@
 from typing import ( 
+    Any,
     List,
     Dict,
     Optional)
@@ -13,6 +14,14 @@ from datetime import datetime
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
+
+# Errores personalizados
+class PostureExtractionError(Exception):
+    pass
+
+class ConversationNotFoundError(Exception):
+    pass
+
 
 class Discutidor3000:
     """Chatbot que defiente una postura dada durante toda la conversación."""
@@ -66,7 +75,7 @@ class Discutidor3000:
 
     def _api_request(self,
                      messages: List[Dict[str,str]],
-                     use_json: bool = False) -> Optional[Dict]:
+                     use_json: bool = False) -> Optional[Dict[str, Any]]:
         """Esta función centraliza toda la comunicación con la API de DeepSeek.
         Args:
             messages (List[Dict[str,str]]): Lista de mensajes en el formato esperado por la API.
@@ -131,7 +140,7 @@ class Discutidor3000:
     def _init_conversation(self,
                            conversation_id: str,
                            posture: str,
-                           initial_message: str) -> Optional[bool]:
+                           initial_message: str) -> None:
         """Inicializa una nueva conversación y la almacena en Redis
         Args:
             conversation_id (str): ID de la conversación.
@@ -152,7 +161,7 @@ class Discutidor3000:
                                     conversation)
         
 
-    def _gen_response(self, conversation_id: str) -> Optional[Dict]:
+    def _gen_response(self, conversation_id: str) -> Optional[Dict[str, Any]]:
         """Genera una respuesta del chatbot para una conversación existente.,
         utilizando el historial de mensajes.
         Args:
@@ -208,37 +217,40 @@ class Discutidor3000:
             message=history)
 
 
-    def new_conversation(self, message: str) -> Optional[Dict]:
+    def new_conversation(self, message: str) -> Optional[ChatResponse]:
         """Inicia una nueva conversación, extrayendo la postura del mensaje inicial.
         Args:
             message (str): Mensaje inicial del usuario.
         Returns:
-            Optional[Dict]: Diccionario con la respuesta del chatbot y el ID de la conversación.
+            Optional[ChatResponse]: Diccionario con la respuesta del chatbot y el ID de la conversación.
             None si hay un error."""
         conversation_id = str(uuid4())
         posture = self._get_posture(message)
-        if posture is None:
-            return None
+        if not posture:
+            raise PostureExtractionError("No se pudo extraer la postura del mensaje inicial.")
         self._init_conversation(conversation_id, posture, message)
-        return self._gen_response(conversation_id)
+        response = self._gen_response(conversation_id)
+        if not response:
+            return None
+        return self._format_response(response)
     
 
     def continue_conversation(self,
                             conversation_id: str,
-                            message: str) -> Optional[Dict]:
+                            message: str) -> Optional[ChatResponse]:
         """Continúa una conversación existente, con un nuevo mensaje del usuario.
         Args:
             conversation_id (str): ID de la conversación.
             message (str): Mensaje del usuario.
         Returns:
-            Optional[Dict]: Diccionario con la respuesta del chatbot y el ID de la conversación.
+            Optional[ChatResponse]: Diccionario con la respuesta del chatbot y el ID de la conversación.
             None si hay un error."""
         logger.debug(f"Continuando conversación ID: {conversation_id} con mensaje: {message}")
         
         # Obtener la conversación desde Redis
         conversation_data = self.redis.get_conversation(conversation_id)
         if not conversation_data:
-            raise ValueError("ID de conversación no válido.")
+            raise ConversationNotFoundError("Conversación no existente.")
         
         # Agregar el nuevo mensaje del usuario
         user_message = Message(role="user", content=message)
@@ -248,13 +260,16 @@ class Discutidor3000:
         # Actualizar en Redis con el nuevo mensaje del usuario
         self.redis.set_conversation(conversation_id, conversation_data)
         
-        return self._gen_response(conversation_id)
+        response = self._gen_response(conversation_id)
+        if not response:
+            return None
+        return self._format_response(response)
     
 
     # función principal para interfaz externa
     def chat(self,
              message: str,
-             conversation_id: Optional[str] = None) -> Optional[Dict]:
+             conversation_id: Optional[str] = None) -> Optional[ChatResponse]:
         """Función principal para interactuar con el chatbot.
         Si no se proporciona conversation_id, se inicia una nueva conversación.
         Args:
@@ -262,18 +277,16 @@ class Discutidor3000:
             conversation_id (Optional[str]): ID de la conversación.
                 Si es None, se inicia una nueva conversación.
         Returns:
-            Optional[Dict]: Diccionario con la respuesta del chatbot y el ID de la conversación.
+            Optional[ChatResponse]: Diccionario con la respuesta del chatbot y el ID de la conversación.
             None si hay un error."""
         if conversation_id is None:
-            response = self.new_conversation(message)
+            return self.new_conversation(message)
         else:
-            response = self.continue_conversation(conversation_id, message)
-        if response is None:
-            return None
-        return self._format_response(response)
+            return self.continue_conversation(conversation_id, message)
     
 
-    def get_all_conversations(self) -> Optional[Dict[str, str]]:
+    def get_all_conversations(self) -> Optional[Dict[str,
+                                                     Optional[List[str]]]]:
         """Obtiene un resumen de todas las conversaciones almacenadas.
         Returns:
             Optional[Dict[str, str]]: Diccionario con los IDs y posturas de todas las conversaciones.

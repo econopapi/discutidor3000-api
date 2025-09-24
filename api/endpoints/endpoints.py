@@ -1,8 +1,13 @@
+from ..structures import ChatRequest
+from ..services.discutidor3000 import (
+    Discutidor3000,
+    ConversationNotFoundError,
+    PostureExtractionError
+)
+
 import os, logging
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from ..structures import ChatRequest, ChatResponse
-from ..services.discutidor3000 import Discutidor3000
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -24,15 +29,22 @@ def chat_endpoint(request: ChatRequest):
             message=request.message,
             conversation_id=request.conversation_id)
         if response is None:
-            return HTTPException(status_code=500,
+            raise HTTPException(status_code=500,
                                  detail="Error en la conversación, inténtalo de nuevo.")
         return JSONResponse(
             status_code=200,
             content=response.model_dump())
+    
+    except ConversationNotFoundError as cnfe:
+        logger.error(f"Conversación no encontrada en el endpoint /chat: {cnfe}")
+        raise HTTPException(status_code=404, detail=str(cnfe))
+    except PostureExtractionError as pee:
+        logger.error(f"Error de extracción de postura en el endpoint /chat: {pee}")
+        raise HTTPException(status_code=500, detail=str(pee))
     except Exception as e:
         logger.error(f"Error en el endpoint /chat: {e}")
         logger.debug(f"Trazo completo del error:", exc_info=True)
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
     
 
 @chat_router.get("/conversations")
@@ -45,4 +57,4 @@ def get_conversations():
     except Exception as e:
         logger.error(f"Error en el endpoint /conversations: {e}")
         logger.debug(f"Trazo completo del error:", exc_info=True)
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))

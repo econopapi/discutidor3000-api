@@ -1,9 +1,9 @@
+from ..structures import Conversation
+
 import os, json, redis, logging
-from typing import Optional
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
-
-from ..structures.structures import Conversation
 
 class RedisService:
     """Servicio para interactuar con Redis."""
@@ -37,7 +37,7 @@ class RedisService:
             return False
         
     
-    def get_conversation(self, conversation_id: str) -> bool:
+    def get_conversation(self, conversation_id: str) -> Optional[Conversation]:
         """Obtiene conversación de Redis
         Args:
             conversation_id (str): ID de la conversación
@@ -54,9 +54,15 @@ class RedisService:
             logger.debug(e.with_traceback(e.__traceback__))
             logger.debug(f"Data obtenida: {data}")
             return None
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"Error al decodificar JSON de conversación en Redis: {e}")
+            logger.debug(f"conversation_id: {conversation_id}")
+            logger.debug(e.with_traceback(e.__traceback__))
+            logger.debug(f"Data obtenida: {data}")
+            return None
         
 
-    def get_all_conversations(self) -> Optional[dict]:
+    def get_all_conversations(self) -> Optional[List[str]]:
         """Obtiene todas las conversaciones almacenadas en Redis
         Returns:
             Optional[dict]: Diccionario con todas las conversaciones o None si hubo error"""
