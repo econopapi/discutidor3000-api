@@ -1,4 +1,5 @@
 from typing import ( 
+    Any,
     List,
     Dict,
     Optional)
@@ -74,7 +75,7 @@ class Discutidor3000:
 
     def _api_request(self,
                      messages: List[Dict[str,str]],
-                     use_json: bool = False) -> Optional[Dict]:
+                     use_json: bool = False) -> Optional[Dict[str, Any]]:
         """Esta función centraliza toda la comunicación con la API de DeepSeek.
         Args:
             messages (List[Dict[str,str]]): Lista de mensajes en el formato esperado por la API.
@@ -139,7 +140,7 @@ class Discutidor3000:
     def _init_conversation(self,
                            conversation_id: str,
                            posture: str,
-                           initial_message: str) -> Optional[bool]:
+                           initial_message: str) -> None:
         """Inicializa una nueva conversación y la almacena en Redis
         Args:
             conversation_id (str): ID de la conversación.
@@ -160,7 +161,7 @@ class Discutidor3000:
                                     conversation)
         
 
-    def _gen_response(self, conversation_id: str) -> Optional[Dict]:
+    def _gen_response(self, conversation_id: str) -> Optional[Dict[str, Any]]:
         """Genera una respuesta del chatbot para una conversación existente.,
         utilizando el historial de mensajes.
         Args:
@@ -284,7 +285,8 @@ class Discutidor3000:
             return self.continue_conversation(conversation_id, message)
     
 
-    def get_all_conversations(self) -> Optional[Dict[str, str]]:
+    def get_all_conversations(self) -> Optional[Dict[str,
+                                                     Optional[List[str]]]]:
         """Obtiene un resumen de todas las conversaciones almacenadas.
         Returns:
             Optional[Dict[str, str]]: Diccionario con los IDs y posturas de todas las conversaciones.
