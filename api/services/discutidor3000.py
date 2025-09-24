@@ -238,7 +238,7 @@ class Discutidor3000:
         # Obtener la conversación desde Redis
         conversation_data = self.redis.get_conversation(conversation_id)
         if not conversation_data:
-            raise ValueError("ID de conversación no válido.")
+            raise ValueError("Conversación no existente.")
         
         # Agregar el nuevo mensaje del usuario
         user_message = Message(role="user", content=message)

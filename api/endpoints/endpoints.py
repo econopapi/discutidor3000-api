@@ -29,10 +29,14 @@ def chat_endpoint(request: ChatRequest):
         return JSONResponse(
             status_code=200,
             content=response.model_dump())
+    
+    except ValueError as ve:
+        logger.error(f"Valor inválido en el endpoint /chat: {ve}")
+        raise HTTPException(status_code=404, detail=str(ve))
     except Exception as e:
         logger.error(f"Error en el endpoint /chat: {e}")
         logger.debug(f"Trazo completo del error:", exc_info=True)
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
     
 
 @chat_router.get("/conversations")
@@ -45,4 +49,4 @@ def get_conversations():
     except Exception as e:
         logger.error(f"Error en el endpoint /conversations: {e}")
         logger.debug(f"Trazo completo del error:", exc_info=True)
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
