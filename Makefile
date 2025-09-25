@@ -12,7 +12,7 @@ help:
 	@echo ""
 	@echo "  make help     - Muestra este mensaje de ayuda"
 	@echo "  make install  - Instala todos los requisitos para ejecutar el servicio"
-	@echo "  make test     - Ejecuta las pruebas"
+	@echo "  make test     - Ejecuta todas las pruebas con cobertura"
 	@echo "  make run      - Ejecuta el servicio y todos los servicios relacionados en Docker"
 	@echo "  make down     - Detiene todos los servicios en ejecución"
 	@echo "  make clean    - Elimina todos los contenedores y redes"
@@ -24,48 +24,48 @@ check-deps: check-docker check-python
 
 check-docker:
 	@command -v docker >/dev/null 2>&1 || { \
-		echo "❌ Docker No instalado.:"; \
-		echo "   Ubuntu/Debian: sudo apt-get install docker.io docker-compose-plugin"; \
-		echo "   Fedora: sudo dnf install docker docker-compose-plugin"; \
-		echo "   CentOS/RHEL: sudo yum install docker docker-compose"; \
-		echo "   Fedora: sudo dnf install docker docker-compose"; \
-		echo "   macOS: brew install docker docker-compose"; \
-		echo "   Windows: Download from https://docker.com/products/docker-desktop"; \
-		exit 1; \
+	    echo "❌ Docker No instalado.:"; \
+	    echo "   Ubuntu/Debian: sudo apt-get install docker.io docker-compose-plugin"; \
+	    echo "   Fedora: sudo dnf install docker docker-compose-plugin"; \
+	    echo "   CentOS/RHEL: sudo yum install docker docker-compose"; \
+	    echo "   Fedora: sudo dnf install docker docker-compose"; \
+	    echo "   macOS: brew install docker docker-compose"; \
+	    echo "   Windows: Download from https://docker.com/products/docker-desktop"; \
+	    exit 1; \
 	}
 	@command -v docker-compose >/dev/null 2>&1 || command -v docker compose >/dev/null 2>&1 || { \
-		echo "❌ Docker Compose no instalado"; \
-		echo "   Fedora: sudo dnf install docker-compose"; \
-		echo "   Ubuntu/Debian: sudo apt-get install docker-compose-plugin"; \
-		echo "   CentOS/RHEL: sudo yum install docker-compose"; \
-		echo "   Fedora: sudo dnf install docker-compose"; \
-		echo "   Or: pip install docker-compose"; \
-		echo "   Or use Docker Desktop which includes Compose"; \
-		exit 1; \
+	    echo "❌ Docker Compose no instalado"; \
+	    echo "   Fedora: sudo dnf install docker-compose"; \
+	    echo "   Ubuntu/Debian: sudo apt-get install docker-compose-plugin"; \
+	    echo "   CentOS/RHEL: sudo yum install docker-compose"; \
+	    echo "   Fedora: sudo dnf install docker-compose"; \
+	    echo "   Or: pip install docker-compose"; \
+	    echo "   Or use Docker Desktop which includes Compose"; \
+	    exit 1; \
 	}
 
 check-python:
 	@command -v python3 >/dev/null 2>&1 || { \
-		echo "❌ Python 3 no instalado. Por favor instala Python 3.8+:"; \
-		echo "   Ubuntu/Debian: sudo apt-get install python3 python3-pip python3-venv"; \
-		echo "   CentOS/RHEL: sudo yum install python3 python3-pip"; \
-		echo "   Fedora: sudo dnf install python3 python3-pip python3-virtualenv"; \
-		echo "   macOS: brew install python3"; \
-		echo "   Windows: Download from https://python.org/downloads/"; \
-		exit 1; \
+	    echo "❌ Python 3 no instalado. Por favor instala Python 3.8+:"; \
+	    echo "   Ubuntu/Debian: sudo apt-get install python3 python3-pip python3-venv"; \
+	    echo "   CentOS/RHEL: sudo yum install python3 python3-pip"; \
+	    echo "   Fedora: sudo dnf install python3 python3-pip python3-virtualenv"; \
+	    echo "   macOS: brew install python3"; \
+	    echo "   Windows: Download from https://python.org/downloads/"; \
+	    exit 1; \
 	}
 
 # Install all requirements
 install: check-deps
 	@echo "🔧 Instalando dependencias para Discutidor3000 API..."
 	@if [ ! -f .env ]; then \
-		echo "📋 Creando .env desde template..."; \
-		cp .env-example .env; \
-		echo "⚠️  Por favor edita .env y configura DEEPSEEK_API_KEY"; \
+	    echo "📋 Creando .env desde template..."; \
+	    cp .env-example .env; \
+	    echo "⚠️  Por favor edita .env y configura DEEPSEEK_API_KEY"; \
 	fi
 	@if [ ! -d "venv" ]; then \
-		echo "🐍 Creando entorno de Python..."; \
-		python3 -m venv venv; \
+	    echo "🐍 Creando entorno de Python..."; \
+	    python3 -m venv venv; \
 	fi
 	@echo "📦 Instalando dependencias de Python..."
 	@. venv/bin/activate && pip install --upgrade pip
@@ -78,26 +78,30 @@ install: check-deps
 	@echo "   1. Edita .el archivo .env y agrega tu DEEPSEEK_API_KEY"
 	@echo "   2. Ejecuta 'make run' para iniciar todos los servicios"
 
-# Run tests
+# Run all tests with coverage - ÚNICO COMANDO DE TESTING
 test: check-deps
-	@echo "🧪 Ejecutando tests..."
+	@echo "🧪 Ejecutando suite completa de tests..."
 	@if [ ! -d "venv" ]; then \
-		echo "❌ Entorno virtual no encontrado. Ejecuta 'make install'."; \
-		exit 1; \
+	    echo "❌ Entorno virtual no encontrado. Ejecuta 'make install' primero."; \
+	    exit 1; \
 	fi
-	@. venv/bin/activate && pytest -v
-	@echo "✅ Todos los tests se ejecutaron correctamente!!"
+	@echo "📊 Ejecutando tests con cobertura..."
+	@. venv/bin/activate && python -m pytest tests/ -v --cov=api --cov-report=term-missing --cov-report=html
+	@echo ""
+	@echo "✅ Tests completados!"
+	@echo "📊 Reporte detallado de cobertura disponible en: htmlcov/index.html"
+	@echo "🎯 Para ver el reporte: open htmlcov/index.html (macOS) o xdg-open htmlcov/index.html (Linux)"
 
 # Run the service and all related services in Docker
 run: check-deps
 	@echo "🚀 Iniciando Discutidor3000 API y servicios relacionados..."
 	@if [ ! -f .env ]; then \
-		echo "❌ Archivo .env no encontrado. Ejecuta 'make install' primero."; \
-		exit 1; \
+	    echo "❌ Archivo .env no encontrado. Ejecuta 'make install' primero."; \
+	    exit 1; \
 	fi
 	@if ! grep -q "DEEPSEEK_API_KEY=" .env || grep -q "DEEPSEEK_API_KEY=$$" .env; then \
-		echo "❌ DEEPSEEK_API_KEY no configurado en .env. Por favor agrega tu API key."; \
-		exit 1; \
+	    echo "❌ DEEPSEEK_API_KEY no configurado en .env. Por favor agrega tu API key."; \
+	    exit 1; \
 	fi
 	@$(DOCKER_COMPOSE) up --build -d
 	@echo "✅ Los servicios se están iniciando..."

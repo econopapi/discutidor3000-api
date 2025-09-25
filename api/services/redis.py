@@ -43,6 +43,7 @@ class RedisService:
             conversation_id (str): ID de la conversación
         Returns:
             bool: True si se obtuvo correctamente, False si hubo error"""
+        data = None
         try:
             data = self.redis.get(f"conversation:{conversation_id}")
             if data:
