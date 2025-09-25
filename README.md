@@ -283,24 +283,102 @@ discutidor3000-api/
 
 Ejecutar la suite completa de tests:
 
+Usando el Makefile (recomendado):
 ```bash
-# Usando Makefile (recomendado)
 make test
-
-# O manualmente
-pytest -v
-
-# O usando unittest
+```
+O directamente con pytest:
+```bash
+pytest -v --cov=api --cov-report=html
+```
+O usando unittest:
+```bash
 python -m unittest discover tests -v
 ```
 
-Los tests cubren:
-- Inicialización del chatbot
-- Generación de prompts del sistema
-- Comunicación con API de DeepSeek
-- Extracción de posturas
-- Gestión de conversaciones
-- Formateo de respuestas
+### Cobertura de Testing
+
+La suite de testing incluye **44 tests** organizados en 4 categorías con **97% de cobertura de código**:
+
+#### 🧪 Tests Unitarios (25 tests)
+
+**Discutidor3000 Service** (`test_discutidor3000.py`):
+- ✅ Inicialización del chatbot (con/sin API key)
+- ✅ Generación de prompts del sistema
+- ✅ Comunicación con API de DeepSeek
+- ✅ Extracción de posturas desde mensajes
+- ✅ Inicialización y gestión de conversaciones
+- ✅ Generación de respuestas del bot
+- ✅ Formateo de respuestas
+- ✅ Manejo de errores y excepciones personalizadas
+
+**Redis Service** (`test_redis.py`):
+- ✅ Operaciones CRUD de conversaciones
+- ✅ Manejo de errores de conexión a Redis
+- ✅ Serialización/deserialización de datos
+- ✅ Gestión de TTL y expiración
+
+#### 🌐 Tests de API (9 tests)
+
+**Endpoints** (`test_endpoints.py`):
+- ✅ Endpoint de health check (`/`)
+- ✅ Endpoint de chat (`/chat`) con nuevas conversaciones
+- ✅ Endpoint de chat con conversaciones existentes
+- ✅ Endpoint de listado de conversaciones (`/conversations`)
+- ✅ Manejo de errores HTTP (404, 500, 422)
+- ✅ Validación de requests malformados
+
+#### 🔗 Tests de Integración (3 tests)
+
+**Flujos Completos** (`test_integration.py`):
+- ✅ Flujo end-to-end de nueva conversación
+- ✅ Flujo de continuación de conversación existente
+- ✅ Manejo de errores en cadena
+
+#### ⚙️ Configuración de Testing
+
+**Fixtures Compartidas** (`conftest.py`):
+- 🔧 Mocks reutilizables de Redis y servicios externos
+- 🔧 Datos de prueba consistentes (conversaciones, mensajes)
+- 🔧 Configuración de entorno de testing
+
+### Reportes de Cobertura
+
+Al ejecutar `make test` se generan automáticamente:
+
+- **Reporte en terminal**: Muestra líneas no cubiertas
+- **Reporte HTML**: Disponible en `htmlcov/index.html`
+
+```bash
+# Ver reporte HTML de cobertura
+open htmlcov/index.html      # macOS
+xdg-open htmlcov/index.html  # Linux
+```
+
+### Estructura de Tests
+
+```
+tests/
+├── conftest.py              # Configuración y fixtures compartidas
+├── test_discutidor3000.py   # Tests del servicio principal (17 tests)
+├── test_redis.py            # Tests del servicio Redis (10 tests)
+├── test_endpoints.py        # Tests de endpoints HTTP (9 tests)
+└── test_integration.py      # Tests de integración (3 tests)
+```
+
+### Tecnologías de Testing
+
+- **pytest**: Framework principal de testing
+- **pytest-cov**: Generación de reportes de cobertura
+- **unittest.mock**: Mocking de dependencias externas
+- **FastAPI TestClient**: Testing de endpoints HTTP
+
+Los tests cubren todos los casos críticos incluyendo:
+- ✅ Casos exitosos (happy path)
+- ✅ Manejo de errores y excepciones
+- ✅ Validación de datos de entrada/salida
+- ✅ Integración entre componentes
+- ✅ Mocking de servicios externos (DeepSeek API, Redis)
 
 ## Configuración Avanzada
 
