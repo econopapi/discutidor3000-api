@@ -10,58 +10,121 @@ Desarrollada en FastAPI y utilizando el modelo `DeepSeek-V3.1 (Non-thinking Mode
 - 🔄 **Conversaciones persistentes**: Almacenamiento en Redis con TTL de 2 semanas
 - 🚀 **API REST**: Endpoints HTTP para integración fácil
 - 💬 **CLI interactivo**: Interfaz de línea de comandos para pruebas
-- 🧪 **Testing completo**: Suite de tests unitarios con cobertura amplia
+- 🧪 **Testing completo**: Suite de tests unitarios y de integración con cobertura completa
 - 📊 **Logging**: Sistema de logging detallado para debugging
 - 🐳 **Containerización**: Despliegue completo con Docker y Docker Compose
 
-## Instalación Rápida con Makefile
+## Quickstart
 
-Este proyecto incluye un Makefile que automatiza todas las tareas de instalación, testing y despliegue:
 
+Lo primero es clonar el repositorio:
 ```bash
-# Ver todos los comandos disponibles
-make
-
-# Instalar todas las dependencias y configurar el proyecto
-make install
-
-# Ejecutar tests
-make test
-
-# Ejecutar el servicio completo en Docker
-make run
-
-# Detener todos los servicios
-make down
-
-# Limpiar completamente todos los contenedores y volúmenes
-make clean
+git clone https://github.com/econopapi/discutidor3000-api.git
+cd discutidor3000-api
 ```
 
-## Variables de Entorno
+Luego, copia el archivo de ejemplo `.env-example` a `.env` y edítalo para agregar tu API key de DeepSeek y otras variables de entorno según sea necesario:
+```bash
+cp .env-example .env
+# Editar .env y agregar variables de entorno
+```
 
-Las siguientes variables de entorno deben configurarse en el archivo `.env`:
+### Variables de Entorno
+#### Variables requeridas
 
-### Variables requeridas
+```bash
+DEEPSEEK_API_KEY=tu_api_key_aqui
+```
+- **Descripción**: API key de DeepSeek para acceso a los modelos de IA
+- **Requerido**: ✅ Sí
+- **Obtención**: Regístrate en [DeepSeek](https://platform.deepseek.com/) y obtén tu API key
 
-| Variable | Descripción | Ejemplo |
-|----------|-------------|---------|
-| `DEEPSEEK_API_KEY` | **Requerida**. API key de DeepSeek para acceder al modelo de chat | `sk-xxxxxxxxxxxxxxxx` |
-
-### Variables opcionales
-Si se usará Redis fuera del contenedor Docker por default, estas variables pueden ser configuradas:
-
-| Variable | Descripción | Valor por Defecto |
-|----------|-------------|-------------------|
-| `REDIS_URL` | URL de conexión a Redis | `redis://localhost:6379/0` |
-
-### Cómo obtener una API Key de DeepSeek
+#### Cómo obtener una API Key de DeepSeek
 
 1. Visita [https://platform.deepseek.com](https://platform.deepseek.com)
 2. Crea una cuenta o inicia sesión
 3. Ve a la sección de "API Keys"
 4. Genera una nueva API key
 5. Copia la key y agrégala a tu archivo `.env`
+
+#### Variables opcionales
+```bash
+REDIS_URL=redis://localhost:6379/0
+```
+- **Descripción**: URL de conexión a Redis para almacenamiento de conversaciones
+- **Requerido**: ❌ No (usa valor por defecto)
+- **Por defecto**: `redis://localhost:6379/0`
+- **Uso**: Si tienes Redis en otro host/puerto o con autenticación
+
+
+```bash
+ROOT_PATH=/api/v1
+```
+- **Descripción**: Prefijo de ruta base para la API cuando se despliega detrás de un reverse proxy
+- **Requerido**: ❌ No
+- **Por defecto**: Sin prefijo (rutas directas)
+- **Casos de uso**:
+  - **Nginx/Apache**: Si tu API está en `https://midominio.com/api/v1/`
+  - **API Gateway**: Para organizar múltiples servicios bajo rutas específicas
+  - **Docker/Kubernetes**: En despliegues con ingress controllers
+
+#### Ejemplo de ROOT_PATH:
+
+**Sin ROOT_PATH** (desarrollo local):
+```
+http://localhost:8000/chat
+http://localhost:8000/conversations
+```
+
+**Con ROOT_PATH=/api/v1** (producción):
+```
+https://miapp.com/api/v1/chat
+https://miapp.com/api/v1/conversations
+```
+
+## Uso de Makefile
+Este proyecto incluye un Makefile que automatiza todas las tareas de instalación, testing y despliegue:
+
+Para ver los comandos disponibles y su descripción, simplemente ejecuta:
+```bash
+make
+```
+
+Instalar dependencias y configurar el entorno:
+```bash
+make install
+```
+
+Ejecutar la suite completa de tests:
+```bash
+make test
+```
+
+Ejecutar el servicio completo (API + Redis) en contenedores Docker:
+```bash
+make run
+```
+
+Detener todos los servicios:
+```bash
+make down
+```
+
+Limpiar todos los contenedores y volúmenes:
+```bash
+make clean
+```
+
+## Comandos del Makefile
+
+| Comando | Descripción |
+|---------|-------------|
+| `make` o `make help` | Muestra lista de todos los comandos disponibles |
+| `make install` | Instala todas las dependencias necesarias. Detecta herramientas faltantes y proporciona instrucciones |
+| `make test` | Ejecuta toda la suite de tests |
+| `make run` | Ejecuta el servicio y todas las dependencias en Docker |
+| `make down` | Detiene todos los servicios en ejecución |
+| `make clean` | Detiene y elimina todos los contenedores, redes y volúmenes |
 
 ## Instalación Manual (Alternativa)
 
@@ -150,17 +213,6 @@ El CLI permite:
 - Iniciar nuevas conversaciones con `/n`
 - Salir con `/q`
 - Conversación continua una vez establecida la postura
-
-## Comandos del Makefile
-
-| Comando | Descripción |
-|---------|-------------|
-| `make` o `make help` | Muestra lista de todos los comandos disponibles |
-| `make install` | Instala todas las dependencias necesarias. Detecta herramientas faltantes y proporciona instrucciones |
-| `make test` | Ejecuta toda la suite de tests |
-| `make run` | Ejecuta el servicio y todas las dependencias en Docker |
-| `make down` | Detiene todos los servicios en ejecución |
-| `make clean` | Detiene y elimina todos los contenedores, redes y volúmenes |
 
 ## API Reference
 
