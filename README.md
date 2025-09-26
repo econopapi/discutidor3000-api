@@ -9,10 +9,10 @@ Desarrollada en FastAPI, con Redis como capa de datos y utilizando el modelo `De
 - 🤖 **Chatbot argumentativo**: Defiende cualquier postura sin importar qué tan absurda sea
 - 🔄 **Conversaciones persistentes**: Almacenamiento en Redis con TTL de 2 semanas
 - 🚀 **API REST**: Endpoints HTTP para integración fácil
-- 💬 **CLI interactivo**: Interfaz de línea de comandos para pruebas
 - 🧪 **Testing completo**: Suite de tests unitarios y de integración con cobertura completa
 - 📊 **Logging**: Sistema de logging detallado para debugging
 - 🐳 **Containerización**: Despliegue completo con Docker y Docker Compose
+- 💬 **CLI interactivo**: Interfaz de línea de comandos para pruebas
 
 ## Quickstart
 
@@ -23,7 +23,7 @@ git clone https://github.com/econopapi/discutidor3000-api.git
 cd discutidor3000-api
 ```
 
-Luego, copia el archivo de ejemplo `.env-example` a `.env` y edítalo para agregar tu API key de DeepSeek y otras variables de entorno según sea necesario:
+Luego, copia el archivo de ejemplo `.env-example` a `.env` y edítalo para agregar tu API key de OpenRouter y otras variables de entorno según sea necesario:
 ```bash
 cp .env-example .env
 # Editar .env y agregar variables de entorno
@@ -50,6 +50,7 @@ OPENROUTER_API_KEY=tu_api_key_aqui
 #### Variables opcionales
 ```bash
 REDIS_URL=redis://localhost:6379/0
+# Opcional: URL de conexión a Redis
 ```
 - **Descripción**: URL de conexión a Redis para almacenamiento de conversaciones
 - **Requerido**: ❌ No (usa valor por defecto)
@@ -58,13 +59,14 @@ REDIS_URL=redis://localhost:6379/0
 
 
 ```bash
-ROOT_PATH=/api/v1
+ROOT_PATH=/discutidor
+# Opcional: Prefijo de ruta base para la API
 ```
 - **Descripción**: Prefijo de ruta base para la API cuando se despliega detrás de un reverse proxy
 - **Requerido**: ❌ No
 - **Por defecto**: Sin prefijo (rutas directas)
 - **Casos de uso**:
-  - **Nginx/Apache**: Si tu API está en `https://midominio.com/api/v1/`
+  - **Nginx/Apache**: Si tu API está en `https://dominio.com/discutdor`
   - **API Gateway**: Para organizar múltiples servicios bajo rutas específicas
   - **Docker/Kubernetes**: En despliegues con ingress controllers
 
@@ -78,8 +80,8 @@ http://localhost:8000/api/v1/conversations
 
 **Con ROOT_PATH=/discutidor** (producción):
 ```
-https://miapp.com/discutidor/api/v1/chat
-https://miapp.com/discutidor/api/v1/conversations
+https://dominio.com/discutidor/api/v1/chat
+https://dominio.com/discutidor/api/v1/conversations
 ```
 
 ## Uso de Makefile
@@ -173,11 +175,11 @@ docker-compose up -d redis
 ### Opción 1: Docker (Recomendado)
 
 ```bash
-# Instalar y configurar todo automáticamente
 make install
+# Instalar y configurar todo automáticamente
 
-# Ejecutar el servicio completo
 make run
+# Ejecutar el servicio completo
 ```
 
 La API estará disponible en `http://localhost:8000` y Redis en `localhost:6379`.
@@ -186,11 +188,11 @@ La API estará disponible en `http://localhost:8000` y Redis en `localhost:6379`
 
 **Iniciar el servidor**
 ```bash
-# Activar entorno virtual
 source venv/bin/activate
+# Activar entorno virtual
 
-# Iniciar servidor
 uvicorn main:api --reload --host 0.0.0.0 --port 8000
+# Iniciar servidor
 ```
 
 **Endpoints disponibles:**
@@ -202,11 +204,11 @@ uvicorn main:api --reload --host 0.0.0.0 --port 8000
 ### CLI Interactivo
 
 ```bash
-# Con entorno virtual activado
 python cli.py
+# Con entorno virtual activado
 
-# O usando el contenedor
 docker-compose exec api python cli.py
+# O usando el contenedor
 ```
 
 El CLI permite:
@@ -216,6 +218,7 @@ El CLI permite:
 
 ## API Reference
 
+La documentación interactiva de la API está disponible en `/docs` una vez que el servidor está en ejecución.
 ### POST /api/v1/chat
 
 Envía un mensaje al chatbot. Si no se proporciona `conversation_id`, se inicia una nueva conversación.
@@ -283,17 +286,9 @@ discutidor3000-api/
 
 Ejecutar la suite completa de tests:
 
-Usando el Makefile (recomendado):
+Usando el Makefile:
 ```bash
 make test
-```
-O directamente con pytest:
-```bash
-pytest -v --cov=api --cov-report=html
-```
-O usando unittest:
-```bash
-python -m unittest discover tests -v
 ```
 
 ### Cobertura de Testing
@@ -349,11 +344,6 @@ Al ejecutar `make test` se generan automáticamente:
 - **Reporte en terminal**: Muestra líneas no cubiertas
 - **Reporte HTML**: Disponible en `htmlcov/index.html`
 
-```bash
-# Ver reporte HTML de cobertura
-open htmlcov/index.html      # macOS
-xdg-open htmlcov/index.html  # Linux
-```
 
 ### Estructura de Tests
 
