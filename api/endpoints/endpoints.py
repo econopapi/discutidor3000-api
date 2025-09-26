@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger(__name__)
-discutidor = Discutidor3000(api_key=os.getenv("DEEPSEEK_API_KEY"))
+discutidor = Discutidor3000(api_key=os.getenv("OPENROUTER_API_KEY"))
 chat_router = APIRouter()
 
 @chat_router.get("/")

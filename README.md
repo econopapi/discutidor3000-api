@@ -2,7 +2,7 @@
 
 Una API HTTP que sirve un chatbot cuya única misión es defender, argumentar y discutir a favor de cualquier tema, por absurdo que sea, asignado por el usuario.
 
-Desarrollada en FastAPI, con Redis como capa de datos y utilizando el modelo `DeepSeek-V3.1 (Non-thinking Mode)` de DeepSeek.
+Desarrollada en FastAPI, con Redis como capa de datos y utilizando el modelo `DeepSeek-V3.1-Terminus` de DeepSeek, a través de OperRouter como proveedor.
 
 ## Características
 
@@ -33,17 +33,17 @@ cp .env-example .env
 #### Variables requeridas
 
 ```bash
-DEEPSEEK_API_KEY=tu_api_key_aqui
+OPENROUTER_API_KEY=tu_api_key_aqui
 ```
-- **Descripción**: API key de DeepSeek para acceso a los modelos de IA
+- **Descripción**: API key de OpenRouter para acceso a los modelos de IA de DeepSeek
 - **Requerido**: ✅ Sí
-- **Obtención**: Regístrate en [DeepSeek](https://platform.deepseek.com/) y obtén tu API key
+- **Obtención**: Regístrate en [OpenRouter](https://openrouter.ai/) y obtén tu API key
 
-#### Cómo obtener una API Key de DeepSeek
+#### Cómo obtener una API Key de OpenRouter
 
-1. Visita [https://platform.deepseek.com](https://platform.deepseek.com)
+1. Visita [https://openrouter.ai/](https://openrouter.ai/)
 2. Crea una cuenta o inicia sesión
-3. Ve a la sección de "API Keys"
+3. Ve a [Settings > API Keys](https://openrouter.ai/settings/preferences)
 4. Genera una nueva API key
 5. Copia la key y agrégala a tu archivo `.env`
 
@@ -72,14 +72,14 @@ ROOT_PATH=/api/v1
 
 **Sin ROOT_PATH** (desarrollo local):
 ```
-http://localhost:8000/chat
-http://localhost:8000/conversations
+http://localhost:8000/api/v1/chat
+http://localhost:8000/api/v1/conversations
 ```
 
-**Con ROOT_PATH=/api/v1** (producción):
+**Con ROOT_PATH=/discutidor** (producción):
 ```
-https://miapp.com/api/v1/chat
-https://miapp.com/api/v1/conversations
+https://miapp.com/discutidor/api/v1/chat
+https://miapp.com/discutidor/api/v1/conversations
 ```
 
 ## Uso de Makefile
@@ -159,7 +159,7 @@ pip install -r requirements.txt
 4. **Configurar variables de entorno**
 ```bash
 cp .env-example .env
-# Editar .env y agregar tu DEEPSEEK_API_KEY
+# Editar .env y agregar tus variables de entorno
 ```
 
 5. **Iniciar Redis**
@@ -385,7 +385,7 @@ Los tests cubren todos los casos críticos incluyendo:
 ### Parámetros del Modelo
 
 El chatbot usa los siguientes parámetros por defecto:
-- **Modelo**: `deepseek-chat`
+- **Modelo**: `deepseek/deepseek-v3.1-terminus` (a través de OpenRouter)
 - **Temperatura**: `0.7`
 - **Max tokens**: `3750`
 
@@ -418,8 +418,8 @@ Por defecto, Redis se configura con:
 
 ### Problemas Comunes
 
-**Error: "DEEPSEEK_API_KEY not set"**
-- Asegúrate de que el archivo `.env` existe y contiene `DEEPSEEK_API_KEY=tu_api_key`
+**Error: "OPENROUTER_API_KEY not set"**
+- Asegúrate de que el archivo `.env` existe y contiene `OPENROUTER_API_KEY=tu_api_key`
 
 **Error: "Docker is not installed"**
 - Instala Docker siguiendo las instrucciones que proporciona `make install`

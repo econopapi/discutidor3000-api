@@ -61,7 +61,7 @@ install: check-deps
 	@if [ ! -f .env ]; then \
 	    echo "📋 Creando .env desde template..."; \
 	    cp .env-example .env; \
-	    echo "⚠️  Por favor edita .env y configura DEEPSEEK_API_KEY"; \
+	    echo "⚠️  Por favor edita .env y configura OPENROUTER_API_KEY"; \
 	fi
 	@if [ ! -d "venv" ]; then \
 	    echo "🐍 Creando entorno de Python..."; \
@@ -75,7 +75,7 @@ install: check-deps
 	@echo "✅ Instalación completada!"
 	@echo ""
 	@echo "📝 Siguientes pasos:"
-	@echo "   1. Edita .el archivo .env y agrega tu DEEPSEEK_API_KEY"
+	@echo "   1. Edita .el archivo .env y agrega tu OPENROUTER_API_KEY"
 	@echo "   2. Ejecuta 'make run' para iniciar todos los servicios"
 
 # Run all tests with coverage - ÚNICO COMANDO DE TESTING
@@ -99,8 +99,8 @@ run: check-deps
 	    echo "❌ Archivo .env no encontrado. Ejecuta 'make install' primero."; \
 	    exit 1; \
 	fi
-	@if ! grep -q "DEEPSEEK_API_KEY=" .env || grep -q "DEEPSEEK_API_KEY=$$" .env; then \
-	    echo "❌ DEEPSEEK_API_KEY no configurado en .env. Por favor agrega tu API key."; \
+	@if ! grep -q "OPENROUTER_API_KEY=" .env || grep -q "OPENROUTER_API_KEY=$$" .env; then \
+	    echo "❌ OPENROUTER_API_KEY no configurado en .env. Por favor agrega tu API key."; \
 	    exit 1; \
 	fi
 	@$(DOCKER_COMPOSE) up --build -d

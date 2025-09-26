@@ -15,7 +15,7 @@ def init():
           - /q : salir""")
     
     # Initialize Discutidor3000 instance
-    api_key = os.getenv('DEEPSEEK_API_KEY')
+    api_key = os.getenv('OPENROUTER_API_KEY')
     discutidor = Discutidor3000(api_key=api_key)
     
     current_conversation_id = None
