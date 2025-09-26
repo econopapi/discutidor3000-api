@@ -73,7 +73,7 @@ ROOT_PATH=/api/v1
 **Sin ROOT_PATH** (desarrollo local):
 ```
 http://localhost:8000/api/v1/chat
-http://localhost:8000/API/V1/conversations
+http://localhost:8000/api/v1/conversations
 ```
 
 **Con ROOT_PATH=/discutidor** (producción):
