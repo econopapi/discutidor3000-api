@@ -27,10 +27,10 @@ class Discutidor3000:
     """Chatbot que defiente una postura dada durante toda la conversación."""
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_base = "https://api.deepseek.com"
+        self.api_base = "https://openrouter.ai/api/v1"
         self.api_endpoint = "/chat/completions"
         self.api_key = api_key
-        self.model = "deepseek-chat"
+        self.model = "deepseek/deepseek-v3.1-terminus"
         self.temperature = 0.7
         self.max_tokens = 3750
         self.headers = {
